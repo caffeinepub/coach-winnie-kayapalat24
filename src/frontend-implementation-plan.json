@@ -1,0 +1,60 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Expose Member ID prominently in coach UI (profile + list) with copy action",
+  "requirements": [
+    {
+      "id": "REQ-19",
+      "summary": "Show a clearly labeled \"Member ID\" (member profile id) near the top of the coach-facing Member Profile page header.",
+      "acceptanceCriteria": [
+        "When a coach opens a member profile (frontend/src/members/MemberProfilePage.tsx), the page shows a visible \"Member ID\" label and the member's `id` value.",
+        "The Member ID is visible without scrolling on typical mobile viewport sizes (placed in the header area near the member name/program).",
+        "All user-facing text related to this change is in English (e.g., \"Member ID\")."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/members/MemberProfilePage.tsx",
+          "operation": "modify",
+          "description": "Add a header-area line under the member name/program that renders an explicit English label \"Member ID\" and displays the current member.id value, styled to remain visible without scrolling on typical mobile viewports."
+        }
+      ]
+    },
+    {
+      "id": "REQ-20",
+      "summary": "Include a clearly labeled \"Member ID\" on each coach-facing Members list card without breaking layout.",
+      "acceptanceCriteria": [
+        "On the Members list page (frontend/src/members/MemberListPage.tsx), each member card displays \"Member ID\" and the member's `id` value.",
+        "The Member ID display does not break the card layout; if long, it is truncated/wrapped in a readable way.",
+        "All user-facing text related to this change is in English."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/members/MemberListPage.tsx",
+          "operation": "modify",
+          "description": "Update member cards to display an explicit English label \"Member ID\" plus member.id, using layout-safe styling (e.g., truncation or wrapping) so long IDs remain readable and do not break the card layout."
+        }
+      ]
+    },
+    {
+      "id": "REQ-21",
+      "summary": "Add a one-tap \"Copy\" action next to the Member ID in the coach-facing member profile header with an English confirmation state.",
+      "acceptanceCriteria": [
+        "On the Member Profile page, the coach can click/tap a \"Copy\" button next to the displayed Member ID.",
+        "Tapping \"Copy\" copies the exact Member ID string to the clipboard.",
+        "The UI provides a clear English confirmation state/message (e.g., \"Copied\") after copying."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/clipboard.ts",
+          "operation": "create",
+          "description": "Add a small clipboard helper that copies a provided string using the browser clipboard API with a safe fallback, enabling consistent copy behavior for the Member ID."
+        },
+        {
+          "path": "frontend/src/members/MemberProfilePage.tsx",
+          "operation": "modify",
+          "description": "Add a \"Copy\" button next to the displayed Member ID in the profile header; on tap, copy the exact member.id string via the clipboard helper and show a clear English confirmation state/message (e.g., temporary \"Copied\")."
+        }
+      ]
+    }
+  ]
+}

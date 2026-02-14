@@ -1,0 +1,74 @@
+{
+  "kind": "build_request",
+  "title": "Expose Member ID in coach UI so coaches can find and share it",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-19",
+      "text": "Update the coach-facing Member Profile page to clearly display the Member ID (the member profile `id`) with an explicit English label \"Member ID\" near the top of the page, so a coach can easily find it after creating a member.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "there is no option in the app that says member ID"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When a coach opens a member profile (frontend/src/members/MemberProfilePage.tsx), the page shows a visible \"Member ID\" label and the member's `id` value.",
+        "The Member ID is visible without scrolling on typical mobile viewport sizes (placed in the header area near the member name/program).",
+        "All user-facing text related to this change is in English (e.g., \"Member ID\")."
+      ]
+    },
+    {
+      "id": "REQ-20",
+      "text": "Update the coach-facing Members list cards to include the Member ID with an explicit English label \"Member ID\" so coaches can find it even without opening the profile.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "there is no option in the app that says member ID"
+        ]
+      },
+      "acceptanceCriteria": [
+        "On the Members list page (frontend/src/members/MemberListPage.tsx), each member card displays \"Member ID\" and the member's `id` value.",
+        "The Member ID display does not break the card layout; if long, it is truncated/wrapped in a readable way.",
+        "All user-facing text related to this change is in English."
+      ]
+    },
+    {
+      "id": "REQ-21",
+      "text": "Add a one-tap \"Copy\" action for Member ID in the coach-facing member profile header to make it easy to share with the member.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "there is no option in the app that says member ID"
+        ]
+      },
+      "acceptanceCriteria": [
+        "On the Member Profile page, the coach can click/tap a \"Copy\" button next to the displayed Member ID.",
+        "Tapping \"Copy\" copies the exact Member ID string to the clipboard.",
+        "The UI provides a clear English confirmation state/message (e.g., \"Copied\") after copying."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not modify files in frontend.immutablePaths (e.g., frontend/src/hooks/useActor.ts, frontend/src/hooks/useInternetIdentity.ts(x), frontend/src/main.tsx, frontend/src/components/ui).",
+    "Backend must remain a single Motoko actor in backend/main.mo; do not introduce additional backend services."
+  ],
+  "nonGoals": [
+    "Do not change how Member IDs are generated (currently using the member profile `id`, created in the frontend as `member_${Date.now()}` when creating a new member).",
+    "Do not add member self-registration or change authentication flows as part of this request.",
+    "Do not add external integrations (SMS/WhatsApp APIs, email, etc.) as part of this request."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

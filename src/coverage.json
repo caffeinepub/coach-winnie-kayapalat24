@@ -1,0 +1,63 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-14T13:45:52.862Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 3,
+    "implemented": 3,
+    "items": [
+      {
+        "id": "REQ-19",
+        "summary": "Update the coach-facing Member Profile page to clearly display the Member ID (the member profile `id`) with an explicit English label \"Member ID\" near the top of the page, so a coach can easily find it after creating a member.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/members/MemberProfilePage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/members/MemberProfilePage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-20",
+        "summary": "Update the coach-facing Members list cards to include the Member ID with an explicit English label \"Member ID\" so coaches can find it even without opening the profile.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/members/MemberListPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/members/MemberListPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-21",
+        "summary": "Add a one-tap \"Copy\" action for Member ID in the coach-facing member profile header to make it easy to share with the member.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/clipboard.ts",
+          "frontend/src/members/MemberProfilePage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/clipboard.ts",
+          "frontend/src/members/MemberProfilePage.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/members/MemberListPage.tsx",
+    "frontend/src/members/MemberProfilePage.tsx",
+    "frontend/src/utils/clipboard.ts",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

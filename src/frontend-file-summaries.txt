@@ -1,0 +1,11 @@
+{
+  "frontend/src/App.tsx": "Main application router with role-based routing using centralized role helpers, extracted component functions for proper React hooks usage, complete route tree for all pages.",
+  "frontend/src/auth/ProfileSetupModal.tsx": "First-login modal to collect user name, account type (Coach/Assistant Coach/Member), and Member ID (required when Member is selected), saves profile via backend.",
+  "frontend/src/hooks/useCurrentUser.ts": "Custom hook that fetches current user profile and exposes role flags using centralized role helper functions for type safety.",
+  "frontend/src/components/AppLayout.tsx": "Responsive layout wrapper with mobile-first header, sidebar navigation, role-based menu items using centralized role helpers, user dropdown with role label helper, and footer with attribution.",
+  "frontend/src/members/MemberFormDialog.tsx": "Comprehensive member create/edit form using enum values for Gender, ReminderPreference, and ConsentStatus with proper type safety.",
+  "frontend/src/utils/roles.ts": "Centralized role helper functions for checking coach staff vs member roles and getting human-readable role labels.",
+  "frontend/src/utils/clipboard.ts": "Utility function to copy text to clipboard with fallback support for older browsers.",
+  "frontend/src/members/MemberProfilePage.tsx": "Member profile detail page with prominent Member ID display in header (visible to coaches only) with copy-to-clipboard button and confirmation state.",
+  "frontend/src/members/MemberListPage.tsx": "Member list page displaying all members in cards with Member ID shown at the top of each card, searchable by name, program type, or Member ID."
+}

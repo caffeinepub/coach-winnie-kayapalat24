@@ -1,0 +1,24 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-14T13:45:52.858Z",
+  "summary": "All three requested coach-UI requirements (display Member ID on profile and list, plus one-tap copy with confirmation) appear to be implemented in the modified frontend member pages, with an added clipboard utility to support copying.",
+  "missing_requirements": [],
+  "hallucinated_features": [
+    {
+      "description": "Members list search now also matches against Member ID (member.id) in addition to name and program type.",
+      "reason": "REQ-20 only asked to display Member ID on member cards; it did not request changing search behavior.",
+      "evidence": [
+        "frontend/src/members/MemberListPage.tsx"
+      ]
+    }
+  ],
+  "confidence": 0.82,
+  "changed_files": [
+    "frontend-file-summaries.txt",
+    "frontend/src/members/MemberListPage.tsx",
+    "frontend/src/members/MemberProfilePage.tsx",
+    "frontend/src/utils/clipboard.ts",
+    "project_state.json"
+  ]
+}

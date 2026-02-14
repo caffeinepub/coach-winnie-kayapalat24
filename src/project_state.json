@@ -1,0 +1,277 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 7,
+  "summary": "Mobile-first web app for “Coach Winnie (Kayapalat24)” to manage member onboarding, daily/weekly check-ins, coach follow-ups, dashboards, exports, and WhatsApp-first messaging (1:1 + broadcasts) with automated reminders in India timezone; includes role-based access, consent/opt-out compliance, and message delivery logging.",
+  "architectural_notes": [
+    "WhatsApp-first communications via Twilio WhatsApp API or Meta WhatsApp Cloud API; implement outbound messaging + inbound webhooks (STOP/START) and delivery status callbacks.",
+    "Preferred stack: Next.js (frontend + API routes) on Vercel, Supabase Postgres + Supabase Auth; use environment variables for provider keys.",
+    "Role-based access control: members can only access their own data; assistant coach limited to assigned members; admin has full access.",
+    "Scheduled automations run in India timezone (default): daily reminders at 8:00 PM and coach digest at 9:00 PM; weekly follow-up task generation.",
+    "Persist message logs (template_id, provider_message_id, status, timestamps) and tie them into member timelines and follow-up tasks.",
+    "Store WhatsApp consent/opt-in status and timestamp per member; respect reminder preference (daily/weekly/both/none) and opt-out compliance."
+  ],
+  "known_issues": [
+    "Deployment domain validation error: generated domain 'coach-winnie-(kayapalat24)' is invalid because it contains parentheses; domain must be 5–50 chars and only letters/numbers/hyphens.",
+    "Coach cannot find/see the Member ID in the app UI after registering a member (no visible Member ID field/label in member profile or members list)."
+  ],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-implement-role-based-authentication-and-session-handling-for-three-roles-admin-coach-email-password-member-email-otp-or-magic-link-and-optional-assistant-coach-email-password-with-route-page-access-control-so-each-user-only-sees-permitted-data-and-actions",
+      "title": "Implement role-based authentication and session handling for three roles: Admin/Coach (email + password), Member (email OTP or magic link), and optional Assistant Coach (email + password), with route/page access control so each user only sees permitted data and actions.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-member-onboarding-and-profile-management-ui-and-backend-apis-create-edit-members-coach-admin-view-profile-member-and-include-required-fields-name-age-gender-height-whatsapp-phone-starting-current-weight-optional-waist-hip-chest-goals-target-weight-date-habit-goals-program-type-trf-windows-defaults-editable-no-snacks-toggle-reminder-preference-daily-weekly-both-none-consent-opt-in",
+      "title": "Build Member onboarding and profile management UI and backend APIs: create/edit members (coach/admin), view profile (member), and include required fields (name, age, gender, height, WhatsApp phone, starting/current weight, optional waist/hip/chest, goals target weight/date + habit goals, program type, TRF windows defaults editable, no-snacks toggle, reminder preference daily/weekly/both/none, consent/opt-in).",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-daily-and-weekly-check-in-flows-forms-backend-daily-quick-check-in-water-workout-minutes-steps-sleep-mood-digestion-compliance-1-5-note-and-weekly-check-in-weight-waist-hip-chest-optional-photos-wins-struggles-with-calculated-insights-bmi-weekly-change-trends",
+      "title": "Implement Daily and Weekly check-in flows (forms + backend): Daily quick check-in (water, workout minutes/steps, sleep, mood, digestion, compliance 1–5, note) and Weekly check-in (weight, waist/hip/chest, optional photos, wins/struggles), with calculated insights (BMI, weekly change %, trends).",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-the-follow-up-task-system-auto-generate-tasks-per-member-based-on-follow-up-frequency-weekly-default-display-coach-task-lists-due-today-overdue-completed-with-color-coded-status-pills-and-allow-marking-tasks-completed-with-optional-coach-note-linkage",
+      "title": "Create the Follow-up Task system: auto-generate tasks per member based on follow-up frequency (weekly default), display coach task lists (Due Today / Overdue / Completed) with color-coded status pills, and allow marking tasks completed with optional coach note linkage.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-whatsapp-first-messaging-actions-as-deep-link-based-sending-wa-me-whatsapp-using-the-provided-templates-weekly-follow-up-daily-reminder-missed-check-in-congrats-with-per-member-one-tap-buttons-that-open-whatsapp-prefilled-and-then-log-the-attempt-in-messagelogs-with-status-tracked-as-manual-sent-failed-in-app",
+      "title": "Implement WhatsApp-first messaging actions as deep-link based sending (wa.me / whatsapp://) using the provided templates (weekly follow-up, daily reminder, missed check-in, congrats), with per-member one-tap buttons that open WhatsApp prefilled and then log the attempt in MessageLogs with status tracked as manual (sent/failed) in-app.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-member-timeline-views-for-coach-and-members-showing-a-unified-chronological-feed-of-daily-weekly-check-ins-coach-notes-follow-up-task-events-announcements-and-whatsapp-message-logs-including-template-and-status",
+      "title": "Build Member timeline views for coach and members showing a unified chronological feed of: daily/weekly check-ins, coach notes, follow-up task events, announcements, and WhatsApp message logs (including template and status).",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-automations-in-india-timezone-by-default-a-daily-at-8-00-pm-send-check-target-list-for-daily-reminder-to-members-who-opted-in-and-haven-t-checked-in-b-weekly-create-follow-up-tasks-and-reminders-c-daily-at-9-00-pm-generate-a-coach-digest-summary-of-overdue-follow-ups-where-direct-whatsapp-sending-is-not-possible-generate-an-actionable-queue-for-the-coach-to-send-via-one-tap-whatsapp-deep-links-and-record-logs",
+      "title": "Implement automations in India timezone by default: (a) daily at 8:00 PM send/check target list for daily reminder to members who opted in and haven’t checked in, (b) weekly create follow-up tasks and reminders, (c) daily at 9:00 PM generate a coach digest summary of overdue follow-ups. Where direct WhatsApp sending is not possible, generate an actionable queue for the coach to send via one-tap WhatsApp deep links and record logs.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-consent-opt-out-opt-in-and-safety-controls-store-consent-timestamp-allow-members-to-set-reminder-frequency-daily-weekly-both-none-provide-in-app-handling-for-opt-out-requests-e-g-member-toggles-or-coach-marks-stop-and-prevent-sending-queuing-reminders-for-opted-out-members",
+      "title": "Implement consent, opt-out/opt-in, and safety controls: store consent + timestamp, allow members to set reminder frequency (daily/weekly/both/none), provide in-app handling for opt-out requests (e.g., member toggles or coach marks STOP), and prevent sending/queuing reminders for opted-out members.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-announcements-updates-module-admin-coach-can-create-announcements-text-optional-image-target-segments-all-team-overdue-program-type-optionally-schedule-publish-to-in-app-feed-for-members-and-generate-a-whatsapp-broadcast-send-queue-using-deep-links-per-recipient-with-messagelogs-entries",
+      "title": "Build Announcements/Updates module: Admin/Coach can create announcements (text + optional image), target segments (all, team, overdue, program type), optionally schedule, publish to in-app feed for members, and generate a WhatsApp broadcast send queue using deep links per recipient with MessageLogs entries.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-coach-and-member-dashboards-coach-dashboard-shows-total-members-active-this-week-overdue-tasks-risk-flags-top-improvers-member-dashboard-shows-streak-progress-chart-next-follow-up-date-latest-coach-note-announcements",
+      "title": "Create Coach and Member dashboards: Coach dashboard shows total members, active this week, overdue tasks, risk flags, top improvers; Member dashboard shows streak, progress chart, next follow-up date, latest coach note, announcements.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-reports-export-for-admin-coach-export-members-check-ins-daily-weekly-follow-up-tasks-announcements-and-message-logs-to-csv-and-excel-compatible-csv-with-filters-by-date-range-and-segment",
+      "title": "Implement Reports/Export for Admin/Coach: export members, check-ins (daily/weekly), follow-up tasks, announcements, and message logs to CSV (and Excel-compatible CSV), with filters by date range and segment.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-settings-screens-for-admin-coach-to-manage-default-reminder-times-8-00-pm-and-9-00-pm-india-time-defaults-follow-up-frequency-defaults-teams-segments-if-used-and-the-whatsapp-message-templates-placeholders-supported-name-with-validation",
+      "title": "Add Settings screens for Admin/Coach to manage: default reminder times (8:00 PM and 9:00 PM India time defaults), follow-up frequency defaults, teams/segments (if used), and the WhatsApp message templates (placeholders supported: {{name}}) with validation.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-seed-the-app-with-sample-data-and-demo-accounts-admin-demo-member-demo-optional-assistant-demo-and-add-basic-tests-for-key-flows-login-submit-check-in-create-complete-follow-up-task-generate-whatsapp-message-deep-link-log-entry-create-announcement-recipient-queue",
+      "title": "Seed the app with sample data and demo accounts (Admin demo + Member demo + optional Assistant demo) and add basic tests for key flows: login, submit check-in, create/complete follow-up task, generate WhatsApp message deep link + log entry, create announcement + recipient queue.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-a-consistent-mobile-first-visual-theme-for-a-motivational-wellness-product-clean-minimal-high-contrast-large-tap-targets-accessible-typography-avoiding-a-blue-purple-primary-palette-and-enforce-consistent-styling-across-all-screens",
+      "title": "Apply a consistent, mobile-first visual theme for a motivational wellness product (clean, minimal, high-contrast, large tap targets, accessible typography), avoiding a blue/purple primary palette, and enforce consistent styling across all screens.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-profile-setup-modal-so-users-can-select-member-as-an-option-when-setting-up-their-profile-and-adjust-the-ui-copy-so-it-is-not-coach-role-only-use-english-user-facing-text-if-member-is-selected-collect-a-member-id-to-associate-to-the-user-profile-and-send-it-in-the-save-profile-mutation",
+      "title": "Update the Profile Setup modal so users can select \"Member\" as an option when setting up their profile, and adjust the UI copy so it is not coach-role-only (use English user-facing text). If \"Member\" is selected, collect a Member ID to associate to the user profile and send it in the save profile mutation.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-frontend-role-helpers-and-routing-logic-to-recognize-the-explicit-member-role-while-preserving-existing-behavior-for-coach-staff-roles",
+      "title": "Update frontend role helpers and routing logic to recognize the explicit \"member\" role while preserving existing behavior for coach-staff roles.",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-coach-facing-member-profile-page-to-clearly-display-the-member-id-the-member-profile-id-with-an-explicit-english-label-member-id-near-the-top-of-the-page-so-a-coach-can-easily-find-it-after-creating-a-member",
+      "title": "Update the coach-facing Member Profile page to clearly display the Member ID (the member profile `id`) with an explicit English label \"Member ID\" near the top of the page, so a coach can easily find it after creating a member.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-coach-facing-members-list-cards-to-include-the-member-id-with-an-explicit-english-label-member-id-so-coaches-can-find-it-even-without-opening-the-profile",
+      "title": "Update the coach-facing Members list cards to include the Member ID with an explicit English label \"Member ID\" so coaches can find it even without opening the profile.",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-one-tap-copy-action-for-member-id-in-the-coach-facing-member-profile-header-to-make-it-easy-to-share-with-the-member",
+      "title": "Add a one-tap \"Copy\" action for Member ID in the coach-facing member profile header to make it easy to share with the member.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Set up authentication and roles (Admin/Coach, Member, optional Assistant Coach) using email/password for admin and OTP/magic link for members",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Member onboarding & profile management (demographics, goals, measurements, program type, TRF windows, reminder preferences, WhatsApp phone)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Daily and weekly check-in flows with metrics, optional photos, and calculated insights (BMI, trends, weekly change %)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Follow-up task system (due/overdue/completed) with one-tap WhatsApp actions and member timeline logging",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "WhatsApp integration (Twilio or Meta Cloud) for 1:1 templates, broadcasts by segments, scheduled sends, and delivery status logging",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Consent/compliance features: opt-in timestamp, STOP/START handling via inbound webhook, member reminder frequency controls, and audit-safe messaging",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Announcements/updates module: create in-app, broadcast via WhatsApp, also visible in in-app feed; segment targeting + scheduling",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Dashboards for coach and members including risk flags (weight up >1%, missed check-ins, digestion/mood flags) and progress views",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Exports/reports: admin export members + check-ins + tasks + message logs to CSV/Excel",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Automations/scheduled jobs in India timezone: daily 8PM reminders, weekly follow-up task creation/reminders, 9PM coach digest via WhatsApp",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Core pages/screens: login, coach dashboard, members list+filters, member profile, daily/weekly check-in forms, follow-up tasks, announcements, reports/export, settings (reminder times/templates/segments)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Production readiness: seed sample data, demo accounts, deployment guide (Vercel+Supabase), env var setup, webhooks, and basic tests for key flows",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Create the core data model and persistence in the single Motoko backend actor for: Users, Members (including whatsapp_phone, consent_status, consent_timestamp, reminder_prefs), DailyCheckins, WeeklyCheckins, FollowupTasks, CoachNotes, Announcements, and MessageLogs (template_id, status, timestamps, provider_message_id if available).",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "Update profile setup so there is a 'member' option (use 'member' instead of 'role' as requested)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "Update the backend user role model to support an explicit \"member\" role (in addition to admin/coach/assistantCoach), and ensure authorization helpers continue to correctly treat admin/coach/assistantCoach as coach-staff and member as non-coach.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Expose the auto-generated Member ID in the coach UI (e.g., member profile header and/or members list) so coaches can find and share it; ensure member profile setup can link by that ID.",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "projectName": "Coach Winnie (Kayapalat24)",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}
