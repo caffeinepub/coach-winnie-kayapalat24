@@ -12,7 +12,15 @@ export function useCurrentUser() {
     queryKey: ['currentUserProfile'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      return actor.getCallerUserProfile();
+      try {
+        return await actor.getCallerUserProfile();
+      } catch (error: any) {
+        // Handle authorization errors gracefully for first-time users
+        if (error.message?.includes('Unauthorized') || error.message?.includes('Only users')) {
+          return null;
+        }
+        throw error;
+      }
     },
     enabled: !!actor && !actorFetching && !!identity,
     retry: false,

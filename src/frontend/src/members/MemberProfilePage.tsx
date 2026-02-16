@@ -1,33 +1,31 @@
 import { useParams } from '@tanstack/react-router';
 import { useCurrentUser } from '../hooks/useCurrentUser';
-import { useGetMemberProfile } from '../hooks/useQueries';
+import { useGetMemberProfile, useUpdateCurrentWeight } from '../hooks/useQueries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { User, Phone, Calendar, TrendingUp, Edit, Copy, Check } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { User, Phone, Calendar, TrendingUp, Edit, Scale, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import MemberFormDialog from './MemberFormDialog';
 import MemberTimeline from '../timeline/MemberTimeline';
 import WhatsAppActions from '../messaging/WhatsAppActions';
-import { copyToClipboard } from '../utils/clipboard';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function MemberProfilePage() {
   const params = useParams({ strict: false });
-  const { userProfile, isCoach } = useCurrentUser();
+  const { userProfile, isCoach, isMember } = useCurrentUser();
   const memberId = params.memberId || userProfile?.memberId;
   const { data: member } = useGetMemberProfile(memberId);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [showWeightForm, setShowWeightForm] = useState(false);
+  const [newWeight, setNewWeight] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleCopyMemberId = async () => {
-    if (!member?.id) return;
-    
-    const success = await copyToClipboard(member.id);
-    if (success) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
+  const updateWeightMutation = useUpdateCurrentWeight();
+
+  const isOwnProfile = isMember && userProfile?.memberId === memberId;
 
   if (!member) {
     return (
@@ -39,36 +37,33 @@ export default function MemberProfilePage() {
 
   const bmi = member.currentWeight / Math.pow(member.heightCm / 100, 2);
 
+  const handleWeightUpdate = async () => {
+    setErrorMessage('');
+    const weight = parseFloat(newWeight);
+    
+    if (isNaN(weight) || weight <= 0) {
+      setErrorMessage('Please enter a valid weight');
+      return;
+    }
+
+    try {
+      await updateWeightMutation.mutateAsync({
+        memberId: member.id,
+        newWeight: weight,
+      });
+      setShowWeightForm(false);
+      setNewWeight('');
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Failed to update weight');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <h1 className="text-3xl font-bold">{member.name}</h1>
           <p className="text-muted-foreground">{member.programType}</p>
-          {isCoach && (
-            <div className="mt-2 flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Member ID:</span>
-              <code className="rounded bg-muted px-2 py-1 text-sm font-mono">{member.id}</code>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCopyMemberId}
-                className="h-7 px-2"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-3 w-3 text-green-600" />
-                    <span className="ml-1 text-xs text-green-600">Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3 w-3" />
-                    <span className="ml-1 text-xs">Copy</span>
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
         </div>
         {isCoach && (
           <Button onClick={() => setShowEditDialog(true)}>
@@ -138,6 +133,66 @@ export default function MemberProfilePage() {
           </CardContent>
         </Card>
       </div>
+
+      {isOwnProfile && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Scale className="h-5 w-5" />
+              Update Weight
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!showWeightForm ? (
+              <Button onClick={() => setShowWeightForm(true)} variant="outline">
+                Update Current Weight
+              </Button>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="weight">Current weight (kg)</Label>
+                  <Input
+                    id="weight"
+                    type="number"
+                    step="0.1"
+                    placeholder="Enter your current weight"
+                    value={newWeight}
+                    onChange={(e) => setNewWeight(e.target.value)}
+                    disabled={updateWeightMutation.isPending}
+                  />
+                </div>
+                {errorMessage && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{errorMessage}</AlertDescription>
+                  </Alert>
+                )}
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleWeightUpdate}
+                    disabled={updateWeightMutation.isPending}
+                  >
+                    {updateWeightMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Save
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowWeightForm(false);
+                      setNewWeight('');
+                      setErrorMessage('');
+                    }}
+                    disabled={updateWeightMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

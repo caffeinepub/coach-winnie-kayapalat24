@@ -12,10 +12,9 @@ import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
-import Blob "mo:core/Blob";
+import Migration "migration";
 
-
-
+(with migration = Migration.run)
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -67,6 +66,7 @@ actor {
     reminderPreference : ReminderPreference;
     consentStatus : ConsentStatus;
     consentTimestamp : ?Time.Time;
+    lastWeightUpdate : ?Time.Time;
   };
 
   public type DailyCheckin = {
@@ -144,6 +144,15 @@ actor {
     memberId : ?Text;
   };
 
+  public type SwitchMemberInput = {
+    whatsappPhone : Text;
+  };
+
+  public type UpdateWeightInput = {
+    memberId : Text;
+    newWeight : Float;
+  };
+
   let membersMap = Map.empty<Text, MemberProfile>();
   let dailyCheckinsMap = Map.empty<Text, DailyCheckin>();
   let weeklyCheckinsMap = Map.empty<Text, WeeklyCheckin>();
@@ -195,16 +204,11 @@ actor {
     };
   };
 
-  // Helper function to check if caller is coach staff (coach or assistantCoach)
-  // Requires both AccessControl authentication AND custom role check
   func isCoachStaff(caller : Principal) : Bool {
-    // Must be authenticated as user or admin in AccessControl
     let accessRole = AccessControl.getUserRole(accessControlState, caller);
     if (accessRole != #user and accessRole != #admin) {
       return false;
     };
-    
-    // Must have coach or assistantCoach role in UserProfile
     switch (userProfiles.get(caller)) {
       case (null) { false };
       case (?profile) {
@@ -213,23 +217,17 @@ actor {
     };
   };
 
-  // Helper function to check if caller is admin
-  // Admins have full access regardless of UserProfile role
   func isAdmin(caller : Principal) : Bool {
     AccessControl.getUserRole(accessControlState, caller) == #admin;
   };
 
-  // Helper function to check if caller owns the member profile
   func isMemberOwner(caller : Principal, memberId : Text) : Bool {
-    // Must be authenticated
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       return false;
     };
-    
     switch (userProfiles.get(caller)) {
       case (null) { false };
       case (?profile) {
-        // Only members can own member profiles
         if (profile.role != #member) {
           return false;
         };
@@ -241,7 +239,6 @@ actor {
     };
   };
 
-  // User profile management (required by frontend)
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can view profiles");
@@ -260,32 +257,44 @@ actor {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
-    
-    // Validate role consistency with AccessControl
-    let accessRole = AccessControl.getUserRole(accessControlState, caller);
+    validateUserProfile(profile);
+    userProfiles.add(caller, profile);
+  };
+
+  func validateUserProfile(profile : UserProfile) {
     switch (profile.role) {
-      case (#coach or #assistantCoach) {
-        // Coach staff must be at least #user in AccessControl
-        if (accessRole == #guest) {
-          Runtime.trap("Invalid role: Coach staff must have user or admin access level");
-        };
-      };
+      case (#coach or #assistantCoach) {};
       case (#member) {
-        // Members must be #user in AccessControl
-        if (accessRole != #user) {
-          Runtime.trap("Invalid role: Members must have user access level");
-        };
-        // Members must have a memberId
         if (profile.memberId == null) {
           Runtime.trap("Invalid profile: Members must have a memberId");
         };
       };
     };
-    
-    userProfiles.add(caller, profile);
   };
 
-  // Member profile management - only coaches/admins can create/update
+  public shared ({ caller }) func switchMember(params : SwitchMemberInput) : async ?UserProfile {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only authenticated users can switch member association");
+    };
+    let memberOpt = findMemberByPhone(params.whatsappPhone);
+    switch (memberOpt) {
+      case (null) { Runtime.trap("Member not found for provided phone number") };
+      case (?member) {
+        let newProfile : UserProfile = {
+          name = member.name;
+          role = #member;
+          memberId = ?member.id;
+        };
+        userProfiles.add(caller, newProfile);
+        ?newProfile;
+      };
+    };
+  };
+
+  func findMemberByPhone(phone : Text) : ?MemberProfile {
+    membersMap.values().toArray().find(func(m) { Text.equal(m.whatsappPhone, phone) });
+  };
+
   public shared ({ caller }) func createMemberProfile(profile : MemberProfile) : async () {
     if (not isCoachStaff(caller) and not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Only coaches and admins can create member profiles");
@@ -303,49 +312,71 @@ actor {
     membersMap.add(id, profile);
   };
 
-  // Members can view their own profile, coaches/admins can view any profile
+  public shared ({ caller }) func updateCurrentWeight(input : UpdateWeightInput) : async () {
+    if (not isMemberOwner(caller, input.memberId)) {
+      Runtime.trap(
+        "Unauthorized: Can only update your own weight"
+      );
+    };
+
+    switch (membersMap.get(input.memberId)) {
+      case (null) { Runtime.trap("Member profile not found") };
+      case (?profile) {
+        let updatedProfile = {
+          profile with
+          currentWeight = input.newWeight;
+          lastWeightUpdate = ?Time.now();
+        };
+        membersMap.add(input.memberId, updatedProfile);
+      };
+    };
+  };
+
   public query ({ caller }) func getMemberProfile(id : Text) : async MemberProfile {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Authentication required");
     };
-
     if (not (isCoachStaff(caller) or isAdmin(caller) or isMemberOwner(caller, id))) {
       Runtime.trap("Unauthorized: Can only view your own profile");
     };
-
     switch (membersMap.get(id)) {
       case (null) { Runtime.trap("Member profile not found") };
       case (?profile) { profile };
     };
   };
 
-  // Daily check-in - only the member can submit their own check-in
   public shared ({ caller }) func submitDailyCheckin(checkin : DailyCheckin) : async () {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Authentication required");
     };
-
     if (not isMemberOwner(caller, checkin.memberId)) {
       Runtime.trap("Unauthorized: Can only submit check-ins for your own profile");
     };
-
     dailyCheckinsMap.add(checkin.id, checkin);
   };
 
-  // Weekly check-in - only the member can submit their own check-in
   public shared ({ caller }) func submitWeeklyCheckin(checkin : WeeklyCheckin) : async () {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Authentication required");
     };
-
     if (not isMemberOwner(caller, checkin.memberId)) {
       Runtime.trap("Unauthorized: Can only submit check-ins for your own profile");
     };
-
     weeklyCheckinsMap.add(checkin.id, checkin);
+
+    switch (membersMap.get(checkin.memberId)) {
+      case (null) { Runtime.trap("Member profile not found") };
+      case (?profile) {
+        let updatedProfile = {
+          profile with
+          currentWeight = checkin.weight;
+          lastWeightUpdate = ?Time.now();
+        };
+        membersMap.add(checkin.memberId, updatedProfile);
+      };
+    };
   };
 
-  // Follow-up tasks - coaches and admins can create
   public shared ({ caller }) func createFollowupTask(task : FollowupTask) : async () {
     if (not isCoachStaff(caller) and not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Only coaches and admins can create follow-up tasks");
@@ -353,7 +384,6 @@ actor {
     followupTasksMap.add(task.id, task);
   };
 
-  // Update task status - coaches and admins only
   public shared ({ caller }) func updateTaskStatus(id : Text, status : TaskStatus) : async () {
     if (not isCoachStaff(caller) and not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Only coaches and admins can update task status");
@@ -367,7 +397,6 @@ actor {
     };
   };
 
-  // Coach notes - coaches and admins only
   public shared ({ caller }) func addCoachNote(note : CoachNote) : async () {
     if (not isCoachStaff(caller) and not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Only coaches and admins can add coach notes");
@@ -375,7 +404,6 @@ actor {
     coachNotesMap.add(note.id, note);
   };
 
-  // Message logging - coaches and admins only
   public shared ({ caller }) func logMessage(log : MessageLog) : async () {
     if (not isCoachStaff(caller) and not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Only coaches and admins can log messages");
@@ -383,7 +411,6 @@ actor {
     messageLogsMap.add(log.id, log);
   };
 
-  // Announcements - only admins and coaches can create
   public shared ({ caller }) func createAnnouncement(announcement : Announcement) : async () {
     if (not isCoachStaff(caller) and not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Only coaches and admins can create announcements");
@@ -391,7 +418,6 @@ actor {
     announcementsMap.add(announcement.id, announcement);
   };
 
-  // Get all members - coaches/admins only
   public query ({ caller }) func getAllMembers() : async [MemberProfile] {
     if (not isCoachStaff(caller) and not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Only coaches and admins can view all members");
@@ -399,23 +425,17 @@ actor {
     membersMap.values().toArray().sort();
   };
 
-  // Get all daily check-ins - coaches/admins can see all, members see only their own
   public query ({ caller }) func getAllDailyCheckins() : async [DailyCheckin] {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Authentication required");
     };
-
     let allCheckins = dailyCheckinsMap.values().toArray();
-
     if (isCoachStaff(caller) or isAdmin(caller)) {
       return allCheckins.sort();
     };
-
-    // Filter to only member's own check-ins
     switch (userProfiles.get(caller)) {
       case (null) { Runtime.trap("User profile not found") };
       case (?profile) {
-        // Only members should reach this point
         if (profile.role != #member) {
           Runtime.trap("Invalid access: Non-members cannot view check-ins");
         };
@@ -429,23 +449,17 @@ actor {
     };
   };
 
-  // Get all weekly check-ins - coaches/admins can see all, members see only their own
   public query ({ caller }) func getAllWeeklyCheckins() : async [WeeklyCheckin] {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Authentication required");
     };
-
     let allCheckins = weeklyCheckinsMap.values().toArray();
-
     if (isCoachStaff(caller) or isAdmin(caller)) {
       return allCheckins.sort();
     };
-
-    // Filter to only member's own check-ins
     switch (userProfiles.get(caller)) {
       case (null) { Runtime.trap("User profile not found") };
       case (?profile) {
-        // Only members should reach this point
         if (profile.role != #member) {
           Runtime.trap("Invalid access: Non-members cannot view check-ins");
         };
@@ -459,7 +473,6 @@ actor {
     };
   };
 
-  // Get all follow-up tasks - coaches/admins only
   public query ({ caller }) func getAllFollowupTasks() : async [FollowupTask] {
     if (not isCoachStaff(caller) and not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Only coaches and admins can view follow-up tasks");
@@ -467,7 +480,6 @@ actor {
     followupTasksMap.values().toArray().sort();
   };
 
-  // Get all coach notes - coaches/admins only
   public query ({ caller }) func getAllCoachNotes() : async [CoachNote] {
     if (not isCoachStaff(caller) and not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Only coaches and admins can view coach notes");
@@ -475,7 +487,6 @@ actor {
     coachNotesMap.values().toArray().sort();
   };
 
-  // Get all message logs - coaches/admins only
   public query ({ caller }) func getAllMessageLogs() : async [MessageLog] {
     if (not isCoachStaff(caller) and not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Only coaches and admins can view message logs");
@@ -483,23 +494,17 @@ actor {
     messageLogsMap.values().toArray().sort();
   };
 
-  // Get all announcements - members see published ones, coaches/admins see all
   public query ({ caller }) func getAllAnnouncements() : async [Announcement] {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Authentication required");
     };
-
     let allAnnouncements = announcementsMap.values().toArray();
-
     if (isCoachStaff(caller) or isAdmin(caller)) {
       return allAnnouncements.sort();
     };
-
-    // Members only see published announcements
     allAnnouncements.filter<Announcement>(func(a) { a.published }).sort();
   };
 
-  // Complete task - coaches and admins only
   public shared ({ caller }) func completeTask(id : Text) : async () {
     if (not isCoachStaff(caller) and not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Only coaches and admins can complete tasks");

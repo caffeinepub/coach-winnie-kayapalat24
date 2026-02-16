@@ -1,71 +1,71 @@
 {
   "kind": "build_request",
-  "title": "Expose Member ID in coach UI so coaches can find and share it",
-  "priority": "high",
+  "title": "Allow members to enter and update their own weight",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-19",
-      "text": "Update the coach-facing Member Profile page to clearly display the Member ID (the member profile `id`) with an explicit English label \"Member ID\" near the top of the page, so a coach can easily find it after creating a member.",
-      "target": "frontend",
+      "id": "REQ-1",
+      "text": "When a member submits a weekly check-in, persist the submitted `weight` as the member’s latest `currentWeight` so the member can update their own weight without coach intervention.",
+      "target": "backend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "there is no option in the app that says member ID"
+          "the member should be able to enter his own weight"
         ]
       },
       "acceptanceCriteria": [
-        "When a coach opens a member profile (frontend/src/members/MemberProfilePage.tsx), the page shows a visible \"Member ID\" label and the member's `id` value.",
-        "The Member ID is visible without scrolling on typical mobile viewport sizes (placed in the header area near the member name/program).",
-        "All user-facing text related to this change is in English (e.g., \"Member ID\")."
+        "Submitting `submitWeeklyCheckin` as a member updates the stored WeeklyCheckin record and also updates the corresponding `MemberProfile.currentWeight` for that same `memberId`.",
+        "A member cannot update `currentWeight` for any other memberId; backend continues to enforce ownership checks.",
+        "Coach/staff/admin behavior remains unchanged (they can still view all members/check-ins as before)."
       ]
     },
     {
-      "id": "REQ-20",
-      "text": "Update the coach-facing Members list cards to include the Member ID with an explicit English label \"Member ID\" so coaches can find it even without opening the profile.",
-      "target": "frontend",
+      "id": "REQ-2",
+      "text": "Add a member-facing UI control to update their current weight directly from the Member Profile page, and persist it to the backend with appropriate authorization checks.",
+      "target": "both",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "there is no option in the app that says member ID"
+          "the member should be able to enter his own weight"
         ]
       },
       "acceptanceCriteria": [
-        "On the Members list page (frontend/src/members/MemberListPage.tsx), each member card displays \"Member ID\" and the member's `id` value.",
-        "The Member ID display does not break the card layout; if long, it is truncated/wrapped in a readable way.",
-        "All user-facing text related to this change is in English."
+        "On `MemberProfilePage`, when the logged-in user is a member viewing their own profile, show an \"Update Weight\" action and a simple form with a numeric input labeled \"Current weight (kg)\" and a Save button.",
+        "Saving updates the member’s stored `currentWeight` and refreshes any relevant queries so the new weight is reflected immediately on the profile and member dashboard.",
+        "Members do not see coach-only profile edit controls (the existing coach \"Edit\" behavior remains coach-only).",
+        "If the backend returns an authorization error, show a clear English error message to the user (e.g., \"You can only update your own weight.\")."
       ]
     },
     {
-      "id": "REQ-21",
-      "text": "Add a one-tap \"Copy\" action for Member ID in the coach-facing member profile header to make it easy to share with the member.",
+      "id": "REQ-3",
+      "text": "Ensure member dashboard weight widgets reflect the member-entered weight consistently by using the latest available stored `currentWeight` and/or latest weekly check-in weight after updates.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "there is no option in the app that says member ID"
+          "the member should be able to enter his own weight"
         ]
       },
       "acceptanceCriteria": [
-        "On the Member Profile page, the coach can click/tap a \"Copy\" button next to the displayed Member ID.",
-        "Tapping \"Copy\" copies the exact Member ID string to the clipboard.",
-        "The UI provides a clear English confirmation state/message (e.g., \"Copied\") after copying."
+        "After a member updates weight (via weekly check-in or the new profile control), `MemberDashboardPage` shows the updated \"Current Weight\" value without requiring a hard refresh.",
+        "If a latest weekly check-in exists, the dashboard continues to prefer that value; otherwise it uses `MemberProfile.currentWeight`, and both remain consistent after updates."
       ]
     }
   ],
   "constraints": [
-    "Do not modify files in frontend.immutablePaths (e.g., frontend/src/hooks/useActor.ts, frontend/src/hooks/useInternetIdentity.ts(x), frontend/src/main.tsx, frontend/src/components/ui).",
-    "Backend must remain a single Motoko actor in backend/main.mo; do not introduce additional backend services."
+    "Backend must remain a single Motoko actor in `backend/main.mo` (no additional backend services).",
+    "Do not edit files under `frontend/src/components/ui` or any other paths listed as immutable in system context."
   ],
   "nonGoals": [
-    "Do not change how Member IDs are generated (currently using the member profile `id`, created in the frontend as `member_${Date.now()}` when creating a new member).",
-    "Do not add member self-registration or change authentication flows as part of this request.",
-    "Do not add external integrations (SMS/WhatsApp APIs, email, etc.) as part of this request."
+    "Adding coach-facing features for setting member weight beyond the existing member profile edit flow.",
+    "Adding new third-party integrations (devices, scales, health APIs).",
+    "Changing the authentication system (Internet Identity remains the only auth mechanism)."
   ],
   "imageRequirements": {
     "required": [],

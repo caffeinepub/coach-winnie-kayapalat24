@@ -10,6 +10,8 @@ import type {
   Announcement,
   UserProfile,
   TaskStatus,
+  SwitchMemberInput,
+  UpdateWeightInput,
 } from '../backend';
 
 // Members
@@ -20,7 +22,15 @@ export function useGetAllMembers() {
     queryKey: ['members'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllMembers();
+      try {
+        return await actor.getAllMembers();
+      } catch (error: any) {
+        // Return empty array for authorization errors (user might not be coach yet)
+        if (error.message?.includes('Unauthorized')) {
+          return [];
+        }
+        throw error;
+      }
     },
     enabled: !!actor && !isFetching,
   });
@@ -70,6 +80,33 @@ export function useUpdateMember() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['members'] });
       queryClient.invalidateQueries({ queryKey: ['member', variables.id] });
+    },
+  });
+}
+
+export function useUpdateCurrentWeight() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: UpdateWeightInput) => {
+      if (!actor) throw new Error('Actor not available');
+      try {
+        return await actor.updateCurrentWeight(input);
+      } catch (error: any) {
+        // Surface backend error messages clearly
+        if (error.message?.includes('Unauthorized')) {
+          throw new Error('You can only update your own weight.');
+        }
+        if (error.message?.includes('Member profile not found')) {
+          throw new Error('Member profile not found.');
+        }
+        throw error;
+      }
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['member', variables.memberId] });
+      queryClient.invalidateQueries({ queryKey: ['members'] });
     },
   });
 }
@@ -126,8 +163,9 @@ export function useSubmitWeeklyCheckin() {
       if (!actor) throw new Error('Actor not available');
       return actor.submitWeeklyCheckin(checkin);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['weeklyCheckins'] });
+      queryClient.invalidateQueries({ queryKey: ['member', variables.memberId] });
     },
   });
 }
@@ -286,7 +324,45 @@ export function useSaveUserProfile() {
   return useMutation({
     mutationFn: async (profile: UserProfile) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.saveCallerUserProfile(profile);
+      try {
+        await actor.saveCallerUserProfile(profile);
+      } catch (error: any) {
+        // Provide clearer error messages
+        if (error.message?.includes('Unauthorized')) {
+          throw new Error('Authorization error. Please try logging in again.');
+        }
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+    },
+  });
+}
+
+export function useSwitchMember() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: SwitchMemberInput) => {
+      if (!actor) throw new Error('Actor not available');
+      try {
+        const result = await actor.switchMember(params);
+        if (!result) {
+          throw new Error('Failed to link member account');
+        }
+        return result;
+      } catch (error: any) {
+        // Surface backend error messages directly
+        if (error.message?.includes('Member not found')) {
+          throw new Error('No member found with that phone number. Please check with your coach.');
+        }
+        if (error.message?.includes('Unauthorized')) {
+          throw new Error('Authorization error. Please try logging in again.');
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });

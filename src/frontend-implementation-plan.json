@@ -1,58 +1,52 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Expose Member ID prominently in coach UI (profile + list) with copy action",
+  "title": "Member self-service current weight updates in profile and dashboard",
   "requirements": [
     {
-      "id": "REQ-19",
-      "summary": "Show a clearly labeled \"Member ID\" (member profile id) near the top of the coach-facing Member Profile page header.",
+      "id": "REQ-2",
+      "summary": "Add a member-only \"Update Weight\" form on the Member Profile page that saves via backend updateCurrentWeight and surfaces authorization errors clearly.",
       "acceptanceCriteria": [
-        "When a coach opens a member profile (frontend/src/members/MemberProfilePage.tsx), the page shows a visible \"Member ID\" label and the member's `id` value.",
-        "The Member ID is visible without scrolling on typical mobile viewport sizes (placed in the header area near the member name/program).",
-        "All user-facing text related to this change is in English (e.g., \"Member ID\")."
+        "On `MemberProfilePage`, when the logged-in user is a member viewing their own profile, show an \"Update Weight\" action and a simple form with a numeric input labeled \"Current weight (kg)\" and a Save button.",
+        "Saving updates the member’s stored `currentWeight` and refreshes any relevant queries so the new weight is reflected immediately on the profile and member dashboard.",
+        "Members do not see coach-only profile edit controls (the existing coach \"Edit\" behavior remains coach-only).",
+        "If the backend returns an authorization error, show a clear English error message to the user (e.g., \"You can only update your own weight.\")."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/members/MemberProfilePage.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Add a header-area line under the member name/program that renders an explicit English label \"Member ID\" and displays the current member.id value, styled to remain visible without scrolling on typical mobile viewports."
-        }
-      ]
-    },
-    {
-      "id": "REQ-20",
-      "summary": "Include a clearly labeled \"Member ID\" on each coach-facing Members list card without breaking layout.",
-      "acceptanceCriteria": [
-        "On the Members list page (frontend/src/members/MemberListPage.tsx), each member card displays \"Member ID\" and the member's `id` value.",
-        "The Member ID display does not break the card layout; if long, it is truncated/wrapped in a readable way.",
-        "All user-facing text related to this change is in English."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/members/MemberListPage.tsx",
-          "operation": "modify",
-          "description": "Update member cards to display an explicit English label \"Member ID\" plus member.id, using layout-safe styling (e.g., truncation or wrapping) so long IDs remain readable and do not break the card layout."
-        }
-      ]
-    },
-    {
-      "id": "REQ-21",
-      "summary": "Add a one-tap \"Copy\" action next to the Member ID in the coach-facing member profile header with an English confirmation state.",
-      "acceptanceCriteria": [
-        "On the Member Profile page, the coach can click/tap a \"Copy\" button next to the displayed Member ID.",
-        "Tapping \"Copy\" copies the exact Member ID string to the clipboard.",
-        "The UI provides a clear English confirmation state/message (e.g., \"Copied\") after copying."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/utils/clipboard.ts",
-          "operation": "create",
-          "description": "Add a small clipboard helper that copies a provided string using the browser clipboard API with a safe fallback, enabling consistent copy behavior for the Member ID."
+          "description": "Add a React Query mutation hook (e.g., `useUpdateCurrentWeight`) that calls the backend capability `updateCurrentWeight`, maps authorization failures to a clear member-facing error message, and invalidates relevant queries (at minimum: the specific `['member', memberId]` profile query; also invalidate `['members']` if needed for coach views). Use the selected \"authorization\" component guidance for handling authorization errors gracefully in the UI and caching behavior; verify the component's usage instructions before implementing."
         },
         {
           "path": "frontend/src/members/MemberProfilePage.tsx",
           "operation": "modify",
-          "description": "Add a \"Copy\" button next to the displayed Member ID in the profile header; on tap, copy the exact member.id string via the clipboard helper and show a clear English confirmation state/message (e.g., temporary \"Copied\")."
+          "description": "When the logged-in user is a member and is viewing their own profile, render an \"Update Weight\" action and an inline form with numeric input labeled \"Current weight (kg)\" and a Save button. Wire the form to the new `useUpdateCurrentWeight` mutation; on success, refresh displayed profile data immediately; on authorization failure, show a clear English error message (e.g., \"You can only update your own weight.\"). Ensure existing coach-only \"Edit\" control remains coach-only. Use the selected \"authorization\" component patterns for determining current user/ownership and for displaying authorization errors; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Wire `MemberProfilePage` into member navigation by adding a `/member/profile` route that renders `MemberProfilePage`, matching the existing member nav item path so members can access the new weight update UI. Use the selected \"authorization\" component guidance for authenticated/role-based navigation expectations; verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Keep member dashboard weight widgets consistent after weight updates by ensuring relevant queries invalidate/refetch and the widget chooses the latest weekly check-in weight otherwise profile currentWeight.",
+      "acceptanceCriteria": [
+        "After a member updates weight (via weekly check-in or the new profile control), `MemberDashboardPage` shows the updated \"Current Weight\" value without requiring a hard refresh.",
+        "If a latest weekly check-in exists, the dashboard continues to prefer that value; otherwise it uses `MemberProfile.currentWeight`, and both remain consistent after updates."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Update the weekly check-in submit mutation (`useSubmitWeeklyCheckin`) to also invalidate the member profile query for the submitting member (e.g., `['member', memberId]`) in addition to `['weeklyCheckins']`, so dashboards/profile reflect the latest stored `currentWeight` after weekly check-in submissions without a hard refresh. Use the selected \"authorization\" component guidance for cache clearing/refresh expectations after authenticated mutations; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/dashboards/MemberDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Refactor the \"Current Weight\" display to explicitly compute the displayed value as: latest weekly check-in weight if present, otherwise `MemberProfile.currentWeight`, and ensure it is derived directly from React Query results so it updates immediately when the relevant queries invalidate/refetch (no hard refresh). Use the selected \"authorization\" component guidance for authenticated data access/caching behavior; verify the component's usage instructions before implementing."
         }
       ]
     }

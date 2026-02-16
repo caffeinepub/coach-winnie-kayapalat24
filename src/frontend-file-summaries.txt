@@ -1,11 +1,15 @@
 {
-  "frontend/src/App.tsx": "Main application router with role-based routing using centralized role helpers, extracted component functions for proper React hooks usage, complete route tree for all pages.",
-  "frontend/src/auth/ProfileSetupModal.tsx": "First-login modal to collect user name, account type (Coach/Assistant Coach/Member), and Member ID (required when Member is selected), saves profile via backend.",
-  "frontend/src/hooks/useCurrentUser.ts": "Custom hook that fetches current user profile and exposes role flags using centralized role helper functions for type safety.",
+  "frontend/src/App.tsx": "Main application router with role-based routing including new /member/profile route for member self-service profile access, complete route tree for all pages.",
+  "frontend/src/auth/ProfileSetupModal.tsx": "First-login modal that defaults account type based on login intent, uses WhatsApp phone number for member linking via switchMember backend call, displays clear error messages, and routes users to appropriate dashboard after successful setup.",
+  "frontend/src/hooks/useCurrentUser.ts": "Custom hook that fetches current user profile with graceful handling of authorization errors for first-time users, exposing role flags using centralized role helper functions.",
   "frontend/src/components/AppLayout.tsx": "Responsive layout wrapper with mobile-first header, sidebar navigation, role-based menu items using centralized role helpers, user dropdown with role label helper, and footer with attribution.",
   "frontend/src/members/MemberFormDialog.tsx": "Comprehensive member create/edit form using enum values for Gender, ReminderPreference, and ConsentStatus with proper type safety.",
   "frontend/src/utils/roles.ts": "Centralized role helper functions for checking coach staff vs member roles and getting human-readable role labels.",
-  "frontend/src/utils/clipboard.ts": "Utility function to copy text to clipboard with fallback support for older browsers.",
-  "frontend/src/members/MemberProfilePage.tsx": "Member profile detail page with prominent Member ID display in header (visible to coaches only) with copy-to-clipboard button and confirmation state.",
-  "frontend/src/members/MemberListPage.tsx": "Member list page displaying all members in cards with Member ID shown at the top of each card, searchable by name, program type, or Member ID."
+  "frontend/src/utils/clipboard.ts": "Utility function to copy text to clipboard with improved error handling and fallback support for older browsers.",
+  "frontend/src/members/MemberProfilePage.tsx": "Member profile detail page with conditional \"Update Weight\" form for members viewing their own profile, showing contact info, stats, goals, preferences, and coach-only edit controls.",
+  "frontend/src/members/MemberListPage.tsx": "Member list page displaying all members in cards, searchable by name and program type only (Member ID removed from search and card display).",
+  "frontend/src/auth/loginIntent.ts": "Utility for persisting and retrieving login intent (coach vs member) across Internet Identity authentication flow using sessionStorage.",
+  "frontend/src/auth/LoginPage.tsx": "Login page with tabbed interface for coach/member sign-in that persists the selected intent before triggering Internet Identity authentication.",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations including new useUpdateCurrentWeight mutation for member self-service weight updates with clear error handling, and updated useSubmitWeeklyCheckin to invalidate member profile queries.",
+  "frontend/src/dashboards/MemberDashboardPage.tsx": "Member dashboard displaying check-in streak, weight progress, and current weight (preferring latest weekly check-in over profile currentWeight), with quick action buttons and announcements feed."
 }

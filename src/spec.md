@@ -1,11 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Make the Member ID easy for coaches to find and share by exposing it prominently in the coach UI.
+**Goal:** Let members enter and update their own weight, and ensure the updated value is reflected consistently across profile, weekly check-ins, and the member dashboard.
 
 **Planned changes:**
-- Update the coach-facing Member Profile page header to display a clearly labeled “Member ID” with the member profile `id` value near the top (visible without scrolling on typical mobile viewports).
-- Add a one-tap “Copy” action next to the Member ID on the Member Profile page, copying the exact ID string and showing an English confirmation (e.g., “Copied”).
-- Update the coach-facing Members list cards to display “Member ID” with the member’s `id` value, ensuring the layout remains readable (truncate/wrap if needed).
+- Update backend weekly check-in submission so a member-submitted `weight` also updates `MemberProfile.currentWeight` for the same `memberId`, while preserving existing ownership/authorization checks.
+- Add a member-facing “Update Weight” action on the Member Profile page (only when a member views their own profile) with a numeric “Current weight (kg)” input and Save button that persists to the backend and handles authorization errors with a clear message.
+- Ensure member dashboard “Current Weight” displays the latest value immediately after updates (via weekly check-in or profile update), preferring latest weekly check-in weight when available and otherwise using `MemberProfile.currentWeight`.
 
-**User-visible outcome:** Coaches can see each member’s ID on both the members list and the member profile page, and can copy the ID with one tap to share it.
+**User-visible outcome:** Members can update their own current weight (from weekly check-ins or directly on their profile) and see the updated weight immediately on their profile and dashboard without a hard refresh.

@@ -115,6 +115,10 @@ export interface DailyCheckin {
     sleepHours: number;
 }
 export type Time = bigint;
+export interface UpdateWeightInput {
+    memberId: string;
+    newWeight: number;
+}
 export interface _CaffeineStorageRefillInformation {
     proposed_top_up_amount?: bigint;
 }
@@ -136,6 +140,7 @@ export interface MemberProfile {
     trfWindowEnd?: Time;
     consentStatus: ConsentStatus;
     heightCm: number;
+    lastWeightUpdate?: Time;
     name: string;
     consentTimestamp?: Time;
     noSnacks: boolean;
@@ -160,6 +165,9 @@ export interface Announcement {
     published: boolean;
     image?: ExternalBlob;
     targetSegment: string;
+}
+export interface SwitchMemberInput {
+    whatsappPhone: string;
 }
 export interface CoachNote {
     id: string;
@@ -246,6 +254,8 @@ export interface backendInterface {
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     submitDailyCheckin(checkin: DailyCheckin): Promise<void>;
     submitWeeklyCheckin(checkin: WeeklyCheckin): Promise<void>;
+    switchMember(params: SwitchMemberInput): Promise<UserProfile | null>;
+    updateCurrentWeight(input: UpdateWeightInput): Promise<void>;
     updateMemberProfile(id: string, profile: MemberProfile): Promise<void>;
     updateTaskStatus(id: string, status: TaskStatus): Promise<void>;
 }
@@ -658,6 +668,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async switchMember(arg0: SwitchMemberInput): Promise<UserProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.switchMember(arg0);
+                return from_candid_opt_n56(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.switchMember(arg0);
+            return from_candid_opt_n56(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async updateCurrentWeight(arg0: UpdateWeightInput): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateCurrentWeight(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateCurrentWeight(arg0);
+            return result;
+        }
+    }
     async updateMemberProfile(arg0: string, arg1: MemberProfile): Promise<void> {
         if (this.processError) {
             try {
@@ -852,6 +890,7 @@ function from_candid_record_n42(_uploadFile: (file: ExternalBlob) => Promise<Uin
     trfWindowEnd: [] | [_Time];
     consentStatus: _ConsentStatus;
     heightCm: number;
+    lastWeightUpdate: [] | [_Time];
     name: string;
     consentTimestamp: [] | [_Time];
     noSnacks: boolean;
@@ -873,6 +912,7 @@ function from_candid_record_n42(_uploadFile: (file: ExternalBlob) => Promise<Uin
     trfWindowEnd?: Time;
     consentStatus: ConsentStatus;
     heightCm: number;
+    lastWeightUpdate?: Time;
     name: string;
     consentTimestamp?: Time;
     noSnacks: boolean;
@@ -895,6 +935,7 @@ function from_candid_record_n42(_uploadFile: (file: ExternalBlob) => Promise<Uin
         trfWindowEnd: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.trfWindowEnd)),
         consentStatus: from_candid_ConsentStatus_n43(_uploadFile, _downloadFile, value.consentStatus),
         heightCm: value.heightCm,
+        lastWeightUpdate: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.lastWeightUpdate)),
         name: value.name,
         consentTimestamp: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.consentTimestamp)),
         noSnacks: value.noSnacks,
@@ -1181,6 +1222,7 @@ function to_candid_record_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8
     trfWindowEnd?: Time;
     consentStatus: ConsentStatus;
     heightCm: number;
+    lastWeightUpdate?: Time;
     name: string;
     consentTimestamp?: Time;
     noSnacks: boolean;
@@ -1202,6 +1244,7 @@ function to_candid_record_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8
     trfWindowEnd: [] | [_Time];
     consentStatus: _ConsentStatus;
     heightCm: number;
+    lastWeightUpdate: [] | [_Time];
     name: string;
     consentTimestamp: [] | [_Time];
     noSnacks: boolean;
@@ -1224,6 +1267,7 @@ function to_candid_record_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         trfWindowEnd: value.trfWindowEnd ? candid_some(value.trfWindowEnd) : candid_none(),
         consentStatus: to_candid_ConsentStatus_n19(_uploadFile, _downloadFile, value.consentStatus),
         heightCm: value.heightCm,
+        lastWeightUpdate: value.lastWeightUpdate ? candid_some(value.lastWeightUpdate) : candid_none(),
         name: value.name,
         consentTimestamp: value.consentTimestamp ? candid_some(value.consentTimestamp) : candid_none(),
         noSnacks: value.noSnacks,

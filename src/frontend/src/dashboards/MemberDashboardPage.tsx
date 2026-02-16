@@ -21,8 +21,11 @@ export default function MemberDashboardPage() {
     .filter((c) => c.memberId === userProfile?.memberId)
     .sort((a, b) => Number(b.date) - Number(a.date))[0];
 
-  const weightChange = latestWeekly && memberProfile
-    ? ((latestWeekly.weight - memberProfile.startingWeight) / memberProfile.startingWeight * 100).toFixed(1)
+  // Display weight: prefer latest weekly check-in, otherwise use profile currentWeight
+  const currentWeight = latestWeekly ? latestWeekly.weight : memberProfile?.currentWeight;
+
+  const weightChange = currentWeight && memberProfile
+    ? ((currentWeight - memberProfile.startingWeight) / memberProfile.startingWeight * 100).toFixed(1)
     : null;
 
   return (
@@ -62,7 +65,7 @@ export default function MemberDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {latestWeekly ? `${latestWeekly.weight} kg` : memberProfile ? `${memberProfile.currentWeight} kg` : 'N/A'}
+              {currentWeight ? `${currentWeight} kg` : 'N/A'}
             </div>
           </CardContent>
         </Card>
@@ -74,55 +77,80 @@ export default function MemberDashboardPage() {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Button
-              className="w-full justify-start"
-              size="lg"
-              onClick={() => navigate({ to: '/member/checkin/daily' })}
-            >
-              <CheckCircle className="mr-2 h-4 w-4" />
+            <Button className="w-full" onClick={() => navigate({ to: '/member/checkin/daily' })}>
               Daily Check-in
             </Button>
-            <Button
-              className="w-full justify-start"
-              variant="outline"
-              onClick={() => navigate({ to: '/member/checkin/weekly' })}
-            >
-              <Calendar className="mr-2 h-4 w-4" />
+            <Button className="w-full" variant="outline" onClick={() => navigate({ to: '/member/checkin/weekly' })}>
               Weekly Check-in
             </Button>
-            <Button
-              className="w-full justify-start"
-              variant="outline"
-              onClick={() => navigate({ to: '/member/profile' })}
-            >
-              <TrendingUp className="mr-2 h-4 w-4" />
-              View Progress
+            <Button className="w-full" variant="outline" onClick={() => navigate({ to: '/member/profile' })}>
+              View Profile
             </Button>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Latest Updates</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Latest Announcements</CardTitle>
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {announcements.slice(0, 3).map((announcement) => (
-                <div key={announcement.id} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{announcement.title}</span>
-                    <MessageSquare className="h-3 w-3 text-muted-foreground" />
+            {announcements.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No announcements yet</p>
+            ) : (
+              <div className="space-y-3">
+                {announcements.slice(0, 3).map((announcement) => (
+                  <div key={announcement.id} className="border-l-2 border-primary pl-3">
+                    <h4 className="font-medium text-sm">{announcement.title}</h4>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{announcement.content}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">{announcement.content}</p>
-                </div>
-              ))}
-              {announcements.length === 0 && (
-                <p className="text-sm text-muted-foreground">No updates yet</p>
-              )}
-            </div>
+                ))}
+                <Button
+                  variant="link"
+                  className="p-0 h-auto"
+                  onClick={() => navigate({ to: '/member/announcements' })}
+                >
+                  View all announcements →
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {memberProfile && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Starting Weight</span>
+                <span className="font-medium">{memberProfile.startingWeight} kg</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Current Weight</span>
+                <span className="font-medium">{currentWeight ? `${currentWeight} kg` : 'N/A'}</span>
+              </div>
+              {memberProfile.targetWeight && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Target Weight</span>
+                  <span className="font-medium">{memberProfile.targetWeight} kg</span>
+                </div>
+              )}
+              <div className="pt-2 border-t">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Total Change</span>
+                  <Badge variant={weightChange && parseFloat(weightChange) < 0 ? 'default' : 'secondary'}>
+                    {weightChange ? `${weightChange}%` : 'N/A'}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

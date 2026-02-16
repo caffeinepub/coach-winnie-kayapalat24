@@ -1,32 +1,76 @@
-import { useState } from 'react';
-import { useSaveUserProfile } from '../hooks/useQueries';
+import { useState, useEffect } from 'react';
+import { useSaveUserProfile, useSwitchMember } from '../hooks/useQueries';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { UserRole } from '../backend';
+import { getLoginIntent, clearLoginIntent } from './loginIntent';
+import { useNavigate } from '@tanstack/react-router';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function ProfileSetupModal() {
+  const navigate = useNavigate();
+  const loginIntent = getLoginIntent();
   const [name, setName] = useState('');
-  const [accountType, setAccountType] = useState<UserRole>(UserRole.coach);
-  const [memberId, setMemberId] = useState('');
+  const [accountType, setAccountType] = useState<UserRole>(
+    loginIntent === 'member' ? UserRole.member : UserRole.coach
+  );
+  const [whatsappPhone, setWhatsappPhone] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
   const saveProfile = useSaveUserProfile();
+  const switchMember = useSwitchMember();
 
   const isMember = accountType === UserRole.member;
-  const isFormValid = name.trim() && (!isMember || memberId.trim());
+  const isFormValid = name.trim() && (!isMember || whatsappPhone.trim());
+
+  useEffect(() => {
+    // Clear validation error when phone changes
+    if (validationError) {
+      setValidationError(null);
+    }
+  }, [whatsappPhone]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) return;
 
-    await saveProfile.mutateAsync({
-      name: name.trim(),
-      role: accountType,
-      memberId: isMember ? memberId.trim() : undefined,
-    });
+    try {
+      if (isMember) {
+        // For members, use switchMember to link via WhatsApp phone
+        await switchMember.mutateAsync({
+          whatsappPhone: whatsappPhone.trim(),
+        });
+      } else {
+        // For coaches, save profile directly
+        await saveProfile.mutateAsync({
+          name: name.trim(),
+          role: accountType,
+          memberId: undefined,
+        });
+      }
+
+      // Clear login intent after successful setup
+      clearLoginIntent();
+
+      // Navigate to appropriate dashboard
+      if (accountType === UserRole.member) {
+        navigate({ to: '/' });
+      } else {
+        navigate({ to: '/coach/dashboard' });
+      }
+    } catch (error: any) {
+      console.error('Profile setup error:', error);
+      // Display backend error message directly
+      const errorMessage = error.message || 'Failed to complete setup. Please try again.';
+      setValidationError(errorMessage);
+    }
   };
+
+  const isPending = saveProfile.isPending || switchMember.isPending;
+  const hasError = saveProfile.isError || switchMember.isError;
 
   return (
     <Dialog open={true}>
@@ -61,18 +105,35 @@ export default function ProfileSetupModal() {
           </div>
           {isMember && (
             <div className="space-y-2">
-              <Label htmlFor="memberId">Member ID</Label>
+              <Label htmlFor="whatsappPhone">WhatsApp Phone Number</Label>
               <Input
-                id="memberId"
-                placeholder="Enter your member ID"
-                value={memberId}
-                onChange={(e) => setMemberId(e.target.value)}
+                id="whatsappPhone"
+                placeholder="Enter your WhatsApp phone number"
+                value={whatsappPhone}
+                onChange={(e) => setWhatsappPhone(e.target.value)}
                 required
               />
+              <p className="text-xs text-muted-foreground">
+                Enter the phone number your coach has on file for you.
+              </p>
             </div>
           )}
-          <Button type="submit" className="w-full" disabled={saveProfile.isPending || !isFormValid}>
-            {saveProfile.isPending ? (
+          {validationError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{validationError}</AlertDescription>
+            </Alert>
+          )}
+          {hasError && !validationError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Failed to complete setup. Please try again or contact support.
+              </AlertDescription>
+            </Alert>
+          )}
+          <Button type="submit" className="w-full" disabled={isPending || !isFormValid}>
+            {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Saving...

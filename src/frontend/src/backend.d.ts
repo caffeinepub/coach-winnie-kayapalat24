@@ -40,6 +40,10 @@ export interface DailyCheckin {
     sleepHours: number;
 }
 export type Time = bigint;
+export interface UpdateWeightInput {
+    memberId: string;
+    newWeight: number;
+}
 export interface MessageLog {
     id: string;
     status: string;
@@ -54,6 +58,7 @@ export interface MemberProfile {
     trfWindowEnd?: Time;
     consentStatus: ConsentStatus;
     heightCm: number;
+    lastWeightUpdate?: Time;
     name: string;
     consentTimestamp?: Time;
     noSnacks: boolean;
@@ -78,6 +83,9 @@ export interface Announcement {
     published: boolean;
     image?: ExternalBlob;
     targetSegment: string;
+}
+export interface SwitchMemberInput {
+    whatsappPhone: string;
 }
 export interface CoachNote {
     id: string;
@@ -153,6 +161,8 @@ export interface backendInterface {
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     submitDailyCheckin(checkin: DailyCheckin): Promise<void>;
     submitWeeklyCheckin(checkin: WeeklyCheckin): Promise<void>;
+    switchMember(params: SwitchMemberInput): Promise<UserProfile | null>;
+    updateCurrentWeight(input: UpdateWeightInput): Promise<void>;
     updateMemberProfile(id: string, profile: MemberProfile): Promise<void>;
     updateTaskStatus(id: string, status: TaskStatus): Promise<void>;
 }

@@ -4,12 +4,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Heart } from 'lucide-react';
+import { setLoginIntent } from './loginIntent';
 
 export default function LoginPage() {
   const { login, loginStatus } = useInternetIdentity();
   const [activeTab, setActiveTab] = useState('coach');
 
   const isLoggingIn = loginStatus === 'logging-in';
+
+  const handleLogin = async (intent: 'coach' | 'member') => {
+    setLoginIntent(intent);
+    await login();
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-amber-50 via-background to-green-50 p-4">
@@ -31,7 +37,7 @@ export default function LoginPage() {
               <p className="text-sm text-muted-foreground">
                 Sign in as a coach or admin to manage members and follow-ups.
               </p>
-              <Button onClick={login} disabled={isLoggingIn} className="w-full" size="lg">
+              <Button onClick={() => handleLogin('coach')} disabled={isLoggingIn} className="w-full" size="lg">
                 {isLoggingIn ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -46,7 +52,7 @@ export default function LoginPage() {
               <p className="text-sm text-muted-foreground">
                 Sign in as a member to track your progress and receive updates.
               </p>
-              <Button onClick={login} disabled={isLoggingIn} className="w-full" size="lg">
+              <Button onClick={() => handleLogin('member')} disabled={isLoggingIn} className="w-full" size="lg">
                 {isLoggingIn ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -77,6 +77,7 @@ export const MemberProfile = IDL.Record({
   'trfWindowEnd' : IDL.Opt(Time),
   'consentStatus' : ConsentStatus,
   'heightCm' : IDL.Float64,
+  'lastWeightUpdate' : IDL.Opt(Time),
   'name' : IDL.Text,
   'consentTimestamp' : IDL.Opt(Time),
   'noSnacks' : IDL.Bool,
@@ -136,6 +137,11 @@ export const UserProfile = IDL.Record({
   'name' : IDL.Text,
   'role' : UserRole,
 });
+export const SwitchMemberInput = IDL.Record({ 'whatsappPhone' : IDL.Text });
+export const UpdateWeightInput = IDL.Record({
+  'memberId' : IDL.Text,
+  'newWeight' : IDL.Float64,
+});
 
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -191,6 +197,8 @@ export const idlService = IDL.Service({
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'submitDailyCheckin' : IDL.Func([DailyCheckin], [], []),
   'submitWeeklyCheckin' : IDL.Func([WeeklyCheckin], [], []),
+  'switchMember' : IDL.Func([SwitchMemberInput], [IDL.Opt(UserProfile)], []),
+  'updateCurrentWeight' : IDL.Func([UpdateWeightInput], [], []),
   'updateMemberProfile' : IDL.Func([IDL.Text, MemberProfile], [], []),
   'updateTaskStatus' : IDL.Func([IDL.Text, TaskStatus], [], []),
 });
@@ -267,6 +275,7 @@ export const idlFactory = ({ IDL }) => {
     'trfWindowEnd' : IDL.Opt(Time),
     'consentStatus' : ConsentStatus,
     'heightCm' : IDL.Float64,
+    'lastWeightUpdate' : IDL.Opt(Time),
     'name' : IDL.Text,
     'consentTimestamp' : IDL.Opt(Time),
     'noSnacks' : IDL.Bool,
@@ -326,6 +335,11 @@ export const idlFactory = ({ IDL }) => {
     'name' : IDL.Text,
     'role' : UserRole,
   });
+  const SwitchMemberInput = IDL.Record({ 'whatsappPhone' : IDL.Text });
+  const UpdateWeightInput = IDL.Record({
+    'memberId' : IDL.Text,
+    'newWeight' : IDL.Float64,
+  });
   
   return IDL.Service({
     '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -381,6 +395,8 @@ export const idlFactory = ({ IDL }) => {
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'submitDailyCheckin' : IDL.Func([DailyCheckin], [], []),
     'submitWeeklyCheckin' : IDL.Func([WeeklyCheckin], [], []),
+    'switchMember' : IDL.Func([SwitchMemberInput], [IDL.Opt(UserProfile)], []),
+    'updateCurrentWeight' : IDL.Func([UpdateWeightInput], [], []),
     'updateMemberProfile' : IDL.Func([IDL.Text, MemberProfile], [], []),
     'updateTaskStatus' : IDL.Func([IDL.Text, TaskStatus], [], []),
   });

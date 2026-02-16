@@ -33,7 +33,7 @@ function RootComponent() {
   }
 
   const isAuthenticated = !!identity;
-  const showProfileSetup = isAuthenticated && isFetched && !userProfile;
+  const showProfileSetup = isAuthenticated && isFetched && userProfile === null;
 
   return (
     <>
@@ -51,13 +51,13 @@ const rootRoute = createRootRoute({
 
 function IndexComponent() {
   const { identity } = useInternetIdentity();
-  const { userProfile } = useCurrentUser();
+  const { userProfile, isLoading } = useCurrentUser();
 
   if (!identity) {
     return <LoginPage />;
   }
 
-  if (!userProfile) {
+  if (isLoading || !userProfile) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -109,22 +109,22 @@ const tasksRoute = createRoute({
   component: TaskListPage,
 });
 
+const announcementComposerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/coach/announcements/compose',
+  component: AnnouncementComposerPage,
+});
+
 const reminderQueueRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/coach/reminders',
+  path: '/coach/automations/reminders',
   component: ReminderQueuePage,
 });
 
-const digestRoute = createRoute({
+const coachDigestRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/coach/digest',
+  path: '/coach/automations/digest',
   component: CoachDigestPage,
-});
-
-const announcementComposerRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/coach/announcements/new',
-  component: AnnouncementComposerPage,
 });
 
 const reportsRoute = createRoute({
@@ -133,19 +133,13 @@ const reportsRoute = createRoute({
   component: ReportsExportPage,
 });
 
-const settingsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/coach/settings',
-  component: SettingsPage,
-});
-
 const memberDashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/member/dashboard',
   component: MemberDashboardPage,
 });
 
-const memberProfileSelfRoute = createRoute({
+const memberProfilePageRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/member/profile',
   component: MemberProfilePage,
@@ -169,6 +163,12 @@ const announcementsFeedRoute = createRoute({
   component: AnnouncementsFeedPage,
 });
 
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings',
+  component: SettingsPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -176,16 +176,16 @@ const routeTree = rootRoute.addChildren([
   membersRoute,
   memberProfileRoute,
   tasksRoute,
-  reminderQueueRoute,
-  digestRoute,
   announcementComposerRoute,
+  reminderQueueRoute,
+  coachDigestRoute,
   reportsRoute,
-  settingsRoute,
   memberDashboardRoute,
-  memberProfileSelfRoute,
+  memberProfilePageRoute,
   dailyCheckinRoute,
   weeklyCheckinRoute,
   announcementsFeedRoute,
+  settingsRoute,
 ]);
 
 const router = createRouter({ routeTree });

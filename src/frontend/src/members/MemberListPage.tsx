@@ -16,8 +16,7 @@ export default function MemberListPage() {
 
   const filteredMembers = members.filter((m) =>
     m.name.toLowerCase().includes(search.toLowerCase()) ||
-    m.programType.toLowerCase().includes(search.toLowerCase()) ||
-    m.id.toLowerCase().includes(search.toLowerCase())
+    m.programType.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -65,12 +64,6 @@ export default function MemberListPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 pb-2 border-b">
-                  <span className="text-xs font-medium text-muted-foreground">Member ID:</span>
-                  <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded truncate max-w-[180px]" title={member.id}>
-                    {member.id}
-                  </code>
-                </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Current Weight:</span>
                   <span className="font-medium">{member.currentWeight} kg</span>

@@ -2,9 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-coach-facing-member-profile-page-to-clearly-display-the-member-id-the-member-profile-id-with-an-explicit-english-label-member-id-near-the-top-of-the-page-so-a-coach-can-easily-find-it-after-creating-a-member",
-      "featureTitle": "Update the coach-facing Member Profile page to clearly display the Member ID (the member profile `id`) with an explicit English label \"Member ID\" near the top of the page, so a coach can easily find it after creating a member.",
+      "featureId": "feature-add-a-member-facing-ui-control-to-update-their-current-weight-directly-from-the-member-profile-page-and-persist-it-to-the-backend-with-appropriate-authorization-checks",
+      "featureTitle": "Add a member-facing UI control to update their current weight directly from the Member Profile page, and persist it to the backend with appropriate authorization checks.",
       "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/hooks/useQueries.ts",
         "frontend/src/members/MemberProfilePage.tsx"
       ],
       "components": [
@@ -17,15 +19,16 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-19"
+        "REQ-2"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-the-coach-facing-members-list-cards-to-include-the-member-id-with-an-explicit-english-label-member-id-so-coaches-can-find-it-even-without-opening-the-profile",
-      "featureTitle": "Update the coach-facing Members list cards to include the Member ID with an explicit English label \"Member ID\" so coaches can find it even without opening the profile.",
+      "featureId": "feature-ensure-member-dashboard-weight-widgets-reflect-the-member-entered-weight-consistently-by-using-the-latest-available-stored-currentweight-and-or-latest-weekly-check-in-weight-after-updates",
+      "featureTitle": "Ensure member dashboard weight widgets reflect the member-entered weight consistently by using the latest available stored `currentWeight` and/or latest weekly check-in weight after updates.",
       "files": [
-        "frontend/src/members/MemberListPage.tsx"
+        "frontend/src/dashboards/MemberDashboardPage.tsx",
+        "frontend/src/hooks/useQueries.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -37,28 +40,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-20"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-a-one-tap-copy-action-for-member-id-in-the-coach-facing-member-profile-header-to-make-it-easy-to-share-with-the-member",
-      "featureTitle": "Add a one-tap \"Copy\" action for Member ID in the coach-facing member profile header to make it easy to share with the member.",
-      "files": [
-        "frontend/src/members/MemberProfilePage.tsx",
-        "frontend/src/utils/clipboard.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-21"
+        "REQ-3"
       ],
       "confidence": "high"
     }

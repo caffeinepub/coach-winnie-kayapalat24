@@ -60,6 +60,7 @@ export interface MemberProfile {
   'trfWindowEnd' : [] | [Time],
   'consentStatus' : ConsentStatus,
   'heightCm' : number,
+  'lastWeightUpdate' : [] | [Time],
   'name' : string,
   'consentTimestamp' : [] | [Time],
   'noSnacks' : boolean,
@@ -88,10 +89,12 @@ export type ReminderPreference = { 'both' : null } |
   { 'none' : null } |
   { 'daily' : null } |
   { 'weekly' : null };
+export interface SwitchMemberInput { 'whatsappPhone' : string }
 export type TaskStatus = { 'completed' : null } |
   { 'dueToday' : null } |
   { 'overdue' : null };
 export type Time = bigint;
+export interface UpdateWeightInput { 'memberId' : string, 'newWeight' : number }
 export interface UserProfile {
   'memberId' : [] | [string],
   'name' : string,
@@ -165,6 +168,8 @@ export interface _SERVICE {
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'submitDailyCheckin' : ActorMethod<[DailyCheckin], undefined>,
   'submitWeeklyCheckin' : ActorMethod<[WeeklyCheckin], undefined>,
+  'switchMember' : ActorMethod<[SwitchMemberInput], [] | [UserProfile]>,
+  'updateCurrentWeight' : ActorMethod<[UpdateWeightInput], undefined>,
   'updateMemberProfile' : ActorMethod<[string, MemberProfile], undefined>,
   'updateTaskStatus' : ActorMethod<[string, TaskStatus], undefined>,
 }
